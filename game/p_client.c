@@ -40,7 +40,7 @@ static void SP_FixCoopSpots (edict_t *self)
 {
 	edict_t	*spot;
 	vec3_t	d;
-
+	
 	spot = NULL;
 
 	while(1)
@@ -1577,6 +1577,8 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	level.current_entity = ent;
 	client = ent->client;
 
+
+	gi.centerprintf(ent, "Time: %d",  (int)level.time);
 	if (level.intermissiontime)
 	{
 		client->ps.pmove.pm_type = PM_FREEZE;

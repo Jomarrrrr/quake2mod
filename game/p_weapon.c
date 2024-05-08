@@ -764,7 +764,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	float	damage_radius;
 	int		radius_damage;
 
-	damage = 100 + (int)(random() * 20.0);
+	damage = 0;
 	radius_damage = 120;
 	damage_radius = 120;
 	if (is_quad)
@@ -813,12 +813,14 @@ BLASTER / HYPERBLASTER
 ======================================================================
 */
 
+
+
 void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
 {
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
-
+	gclient_t *mover;
 	if (is_quad)
 		damage *= 4;
 	AngleVectors (ent->client->v_angle, forward, right, NULL);
@@ -828,9 +830,21 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
+	
+	
+	
 
-	fire_blaster (ent, start, forward, damage, 1000, effect, hyper);
 
+	fire_blaster(ent, start, forward , (damage* abs(ent->velocity[0]+ ent->velocity[1])), 1000, effect, hyper);
+	start[0] += right[0] * 50;
+	start[1] += right[1] * 50;
+	start[2] += right[2] * 50;
+	fire_blaster(ent, start, forward, damage, 1000, effect, hyper);
+
+	start[0] -= right[0] * 80;
+	start[1] -= right[1] * 80;
+	start[2] -= right[2] * 80;
+	fire_blaster(ent, start, forward, damage, 1000, effect, hyper);
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
@@ -841,8 +855,8 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	gi.multicast (ent->s.origin, MULTICAST_PVS);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
+	
 }
-
 
 void Weapon_Blaster_Fire (edict_t *ent)
 {
@@ -1194,7 +1208,9 @@ void weapon_shotgun_fire (edict_t *ent)
 		ent->client->ps.gunframe++;
 		return;
 	}
+	gclient_t* mover;
 
+	mover = ent->client;
 	AngleVectors (ent->client->v_angle, forward, right, NULL);
 
 	VectorScale (forward, -2, ent->client->kick_origin);
@@ -1208,6 +1224,7 @@ void weapon_shotgun_fire (edict_t *ent)
 		damage *= 4;
 		kick *= 4;
 	}
+	VectorSet(ent->velocity, ent->velocity[0], ent->velocity[1], 200);
 
 	if (deathmatch->value)
 		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
@@ -1242,9 +1259,14 @@ void weapon_supershotgun_fire (edict_t *ent)
 	vec3_t		forward, right;
 	vec3_t		offset;
 	vec3_t		v;
-	int			damage = 6;
+	int			damage = 80;
 	int			kick = 12;
+	gclient_t* mover;
 
+	mover = ent->client;
+
+	AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+	VectorSet(ent->velocity, -2 * forward[0] * 200, -2 * forward[1] * 200, 20);
 	AngleVectors (ent->client->v_angle, forward, right, NULL);
 
 	VectorScale (forward, -2, ent->client->kick_origin);
@@ -1314,7 +1336,7 @@ void weapon_railgun_fire (edict_t *ent)
 	}
 	else
 	{
-		damage = 150;
+		damage = 150* abs(ent->velocity[0] + ent->velocity[1]);
 		kick = 250;
 	}
 
@@ -1374,7 +1396,8 @@ void weapon_bfg_fire (edict_t *ent)
 	if (deathmatch->value)
 		damage = 200;
 	else
-		damage = 500;
+		damage = 1000;
+	VectorSet(ent->velocity, 0, 0, ent->velocity[2]);
 
 	if (ent->client->ps.gunframe == 9)
 	{
